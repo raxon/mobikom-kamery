@@ -13,9 +13,9 @@ essentials:
       # Bottom left panel
       - url: "rtsp://admin:amsystem@192.168.100.180:554"
         force_coordinates: [0, 540, 600, 800]
-      # Bottom middle panel
-      - url: "rtsp://admin:amsystem@192.168.100.71:554"
-        force_coordinates: [600, 800, 1260, 1080]
-      # Bottom right panel
-      - url: "rtsp://admin:amsystem@192.168.100.182:554"
-        force_coordinates: [1260, 800, 1920, 1080]
+      # # Bottom middle panel
+      # - url: "rtsp://admin:amsystem@192.168.100.71:554"
+      #   force_coordinates: [600, 800, 1260, 1080]
+      # # Bottom right panel
+      # - url: "rtsp://admin:amsystem@192.168.100.182:554"
+      #   force_coordinates: [1260, 800, 1920, 1080]
