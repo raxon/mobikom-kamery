@@ -1,14 +1,14 @@
 # THIS IS A YAML FILE, INDENTATION IS IMPORTANT. USE SPACES, NOT TABS
-# Configuration for layout with one large screen on top and two smaller screens on bottom
+# Configuration for custom layout with three camera streams
 essentials:
   screens:
     - streams:
-      # Large panel on top (full width)
+      # Large panel on the right
       - url: "rtsp://admin:amsystem@192.168.100.184:554"
-        force_coordinates: [0, 0, 1920, 810]
-      # Bottom left panel
+        force_coordinates: [600, 0, 1920, 800]
+      # Top left panel
       - url: "rtsp://admin:amsystem@192.168.100.250:554"
-        force_coordinates: [0, 810, 960, 1080]
-      # Bottom right panel  
+        force_coordinates: [0, 0, 600, 270]
+      # Bottom left panel  
       - url: "rtsp://admin:amsystem@192.168.100.180:554"
-        force_coordinates: [960, 810, 1920, 1080]
+        force_coordinates: [0, 540, 600, 800]
