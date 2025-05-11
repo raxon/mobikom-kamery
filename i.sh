@@ -1,81 +1,55 @@
 #!/bin/bash
 
-# OpenSurv Autostart Setup Script for Debian
-# This script automatically sets up OpenSurv to start on system boot
+# Complete OpenSurv Autostart Setup Script
+# This script:
+# 1. Sets up OpenSurv to start automatically on boot
+# 2. Configures the "mobikom" user to auto-login without password
 
-# Ensure the script is run as root
+# Ensure script is run as root
 if [ "$(id -u)" -ne 0 ]; then
     echo "Please run this script as root or with sudo"
     exit 1
 fi
 
-# Get the current user (the one who ran sudo)
-if [ -n "$SUDO_USER" ]; then
-    CURRENT_USER="$SUDO_USER"
+echo "Setting up complete OpenSurv autostart configuration..."
+
+# Check if mobikom user exists
+if id "mobikom" &>/dev/null; then
+    echo "User 'mobikom' exists, will configure auto-login"
 else
-    CURRENT_USER="$(whoami)"
+    echo "User 'mobikom' does not exist. Creating user..."
+    useradd -m mobikom
+    echo "Set password for 'mobikom' user:"
+    passwd mobikom
 fi
 
-echo "Setting up OpenSurv autostart for user: $CURRENT_USER"
+# 1. Set up autostart for OpenSurv
+echo "Creating OpenSurv autostart service..."
 
-# Find OpenSurv executable - thorough search
-echo "Searching for OpenSurv executable (this may take a minute)..."
-OPENSURV_EXEC=""
+# Try to find the OpenSurv executable
+echo "Searching for OpenSurv executable..."
+OPENSURV_BIN=""
 
-# Check known binary locations first (faster)
-for DIR in /usr/bin /usr/local/bin /opt/opensurv /usr/share/opensurv /home/$CURRENT_USER/opensurv; do
-    if [ -x "$DIR/opensurv" ]; then
-        OPENSURV_EXEC="$DIR/opensurv"
+for DIR in /usr/bin /usr/local/bin /opt/opensurv /usr/share/opensurv /home/mobikom; do
+    if [ -f "$DIR/opensurv" ]; then
+        OPENSURV_BIN="$DIR/opensurv"
         break
     fi
 done
 
-# If not found, do a more thorough search
-if [ -z "$OPENSURV_EXEC" ]; then
-    echo "Not found in common locations, performing deeper search..."
+if [ -z "$OPENSURV_BIN" ]; then
+    echo "Could not find OpenSurv executable, please enter the path:"
+    read -p "OpenSurv path: " OPENSURV_BIN
 
-    # Use find with timeout to prevent excessive searching
-    FOUND_PATH=$(find /usr /opt /home/$CURRENT_USER -name "opensurv" -type f -executable 2>/dev/null | head -n 1)
-
-    if [ -n "$FOUND_PATH" ]; then
-        OPENSURV_EXEC="$FOUND_PATH"
+    if [ ! -f "$OPENSURV_BIN" ]; then
+        echo "Error: File does not exist. Aborting."
+        exit 1
     fi
 fi
 
-# Check for alternative executable names if still not found
-if [ -z "$OPENSURV_EXEC" ]; then
-    for ALT_NAME in OpenSurv openSurv OPENSURV; do
-        FOUND_PATH=$(find /usr /opt /home/$CURRENT_USER -name "$ALT_NAME" -type f -executable 2>/dev/null | head -n 1)
-        if [ -n "$FOUND_PATH" ]; then
-            OPENSURV_EXEC="$FOUND_PATH"
-            break
-        fi
-    done
-fi
+OPENSURV_DIR=$(dirname "$OPENSURV_BIN")
 
-# If still not found, check for process
-if [ -z "$OPENSURV_EXEC" ]; then
-    echo "Checking currently running processes..."
-    PROCESS_PATH=$(ps -ef | grep -i "[o]pensurv" | awk '{print $8}' | head -n 1)
-    if [ -n "$PROCESS_PATH" ] && [ -x "$PROCESS_PATH" ]; then
-        OPENSURV_EXEC="$PROCESS_PATH"
-    fi
-fi
-
-# If not found at all, exit
-if [ -z "$OPENSURV_EXEC" ]; then
-    echo "Error: Could not find OpenSurv executable automatically."
-    echo "Please install OpenSurv or run it once before running this script."
-    exit 1
-fi
-
-echo "Found OpenSurv executable: $OPENSURV_EXEC"
-
-# Get the directory containing the executable
-OPENSURV_DIR=$(dirname "$OPENSURV_EXEC")
-echo "OpenSurv directory: $OPENSURV_DIR"
-
-# Create systemd service file
+# Create systemd service file for OpenSurv
 cat >/etc/systemd/system/opensurv.service <<EOF
 [Unit]
 Description=OpenSurv Camera Surveillance System
@@ -83,8 +57,8 @@ After=network.target
 
 [Service]
 Type=simple
-User=$CURRENT_USER
-ExecStart=$OPENSURV_EXEC
+User=mobikom
+ExecStart=$OPENSURV_BIN
 WorkingDirectory=$OPENSURV_DIR
 Restart=on-failure
 RestartSec=5
@@ -93,29 +67,113 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 
-echo "Created systemd service file: /etc/systemd/system/opensurv.service"
+echo "Created OpenSurv service file"
 
-# Reload systemd, enable and start service
-echo "Reloading systemd daemon..."
-systemctl daemon-reload
+# 2. Set up auto-login for mobikom user
+echo "Setting up auto-login for mobikom user..."
 
+# Check which display manager is in use
+if [ -f /etc/lightdm/lightdm.conf ]; then
+    # LightDM configuration (Ubuntu, Linux Mint, etc.)
+    echo "Configuring LightDM for auto-login..."
+
+    # Backup original config
+    cp /etc/lightdm/lightdm.conf /etc/lightdm/lightdm.conf.backup
+
+    # Update or create the autologin configuration
+    if grep -q "^\[Seat:\*\]" /etc/lightdm/lightdm.conf; then
+        # Section exists, update/add values
+        sed -i '/^autologin-user=/d' /etc/lightdm/lightdm.conf
+        sed -i '/^autologin-user-timeout=/d' /etc/lightdm/lightdm.conf
+        sed -i '/^\[Seat:\*\]/a autologin-user=mobikom\nautologin-user-timeout=0' /etc/lightdm/lightdm.conf
+    else
+        # Create section if it doesn't exist
+        echo -e "\n[Seat:*]\nautologin-user=mobikom\nautologin-user-timeout=0" >>/etc/lightdm/lightdm.conf
+    fi
+
+elif [ -f /etc/gdm/custom.conf ] || [ -f /etc/gdm3/custom.conf ]; then
+    # GDM configuration (GNOME, Debian, etc.)
+    echo "Configuring GDM for auto-login..."
+
+    GDM_CONF=""
+    if [ -f /etc/gdm/custom.conf ]; then
+        GDM_CONF="/etc/gdm/custom.conf"
+    else
+        GDM_CONF="/etc/gdm3/custom.conf"
+    fi
+
+    # Backup original config
+    cp $GDM_CONF ${GDM_CONF}.backup
+
+    # Update or create the autologin configuration
+    if grep -q "^\[daemon\]" $GDM_CONF; then
+        # Section exists, update/add values
+        sed -i '/^AutomaticLoginEnable=/d' $GDM_CONF
+        sed -i '/^AutomaticLogin=/d' $GDM_CONF
+        sed -i '/^\[daemon\]/a AutomaticLoginEnable=true\nAutomaticLogin=mobikom' $GDM_CONF
+    else
+        # Create section if it doesn't exist
+        echo -e "\n[daemon]\nAutomaticLoginEnable=true\nAutomaticLogin=mobikom" >>$GDM_CONF
+    fi
+
+elif [ -f /etc/sddm.conf ] || [ -d /etc/sddm.conf.d ]; then
+    # SDDM configuration (KDE Plasma, etc.)
+    echo "Configuring SDDM for auto-login..."
+
+    if [ -f /etc/sddm.conf ]; then
+        # Backup original config
+        cp /etc/sddm.conf /etc/sddm.conf.backup
+
+        # Update or create the autologin configuration
+        if grep -q "^\[Autologin\]" /etc/sddm.conf; then
+            # Section exists, update values
+            sed -i '/^User=/d' /etc/sddm.conf
+            sed -i '/^Session=/d' /etc/sddm.conf
+            sed -i '/^\[Autologin\]/a User=mobikom' /etc/sddm.conf
+        else
+            # Create section
+            echo -e "\n[Autologin]\nUser=mobikom" >>/etc/sddm.conf
+        fi
+    else
+        # Create new config file in conf.d directory
+        mkdir -p /etc/sddm.conf.d
+        echo -e "[Autologin]\nUser=mobikom" >/etc/sddm.conf.d/autologin.conf
+    fi
+
+else
+    # Fall back to systemd automatic login
+    echo "Could not detect display manager, setting up systemd auto-login..."
+
+    # Create directory if it doesn't exist
+    mkdir -p /etc/systemd/system/getty@tty1.service.d/
+
+    # Create override file for getty service
+    cat >/etc/systemd/system/getty@tty1.service.d/override.conf <<EOF
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin mobikom --noclear %I \$TERM
+EOF
+
+    echo "Configured systemd for auto-login on tty1"
+fi
+
+# 3. Enable and start the OpenSurv service
 echo "Enabling OpenSurv service to start on boot..."
+systemctl daemon-reload
 systemctl enable opensurv.service
-
-echo "Starting OpenSurv service..."
 systemctl start opensurv.service
 
 # Check if service started successfully
 if systemctl is-active opensurv.service >/dev/null 2>&1; then
-    echo "OpenSurv service is running!"
+    echo "✅ OpenSurv service is running!"
 else
-    echo "Warning: OpenSurv service failed to start. Check logs with: journalctl -u opensurv.service"
+    echo "⚠️ OpenSurv service failed to start. Check logs with: journalctl -u opensurv.service"
 fi
 
 echo ""
-echo "Setup complete! OpenSurv will now start automatically on system boot."
-echo "Use these commands to manage the service:"
-echo "  - Check status: sudo systemctl status opensurv.service"
-echo "  - Start service: sudo systemctl start opensurv.service"
-echo "  - Stop service: sudo systemctl stop opensurv.service"
-echo "  - Disable autostart: sudo systemctl disable opensurv.service"
+echo "Setup complete! Your system is now configured to:"
+echo "  1. Automatically login as 'mobikom' user"
+echo "  2. Automatically start OpenSurv on boot"
+echo ""
+echo "These changes will take effect after reboot."
+echo "To test, run: sudo reboot"
