@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # OpenSurv Autostart Setup Script for Debian
-# This script sets up OpenSurv to start on system boot
+# This script automatically sets up OpenSurv to start on system boot
 
 # Ensure the script is run as root
 if [ "$(id -u)" -ne 0 ]; then
@@ -18,31 +18,58 @@ fi
 
 echo "Setting up OpenSurv autostart for user: $CURRENT_USER"
 
-# Find OpenSurv executable
-echo "Searching for OpenSurv executable..."
+# Find OpenSurv executable - thorough search
+echo "Searching for OpenSurv executable (this may take a minute)..."
 OPENSURV_EXEC=""
 
-# Try common locations
-if [ -x "/usr/bin/opensurv" ]; then
-    OPENSURV_EXEC="/usr/bin/opensurv"
-elif [ -x "/usr/local/bin/opensurv" ]; then
-    OPENSURV_EXEC="/usr/local/bin/opensurv"
-elif [ -x "/opt/opensurv/opensurv" ]; then
-    OPENSURV_EXEC="/opt/opensurv/opensurv"
-fi
+# Check known binary locations first (faster)
+for DIR in /usr/bin /usr/local/bin /opt/opensurv /usr/share/opensurv /home/$CURRENT_USER/opensurv; do
+    if [ -x "$DIR/opensurv" ]; then
+        OPENSURV_EXEC="$DIR/opensurv"
+        break
+    fi
+done
 
-# If not found, ask user
+# If not found, do a more thorough search
 if [ -z "$OPENSURV_EXEC" ]; then
-    echo "OpenSurv executable not found. Please enter the path manually:"
-    read -p "Path to OpenSurv executable: " OPENSURV_EXEC
+    echo "Not found in common locations, performing deeper search..."
 
-    if [ ! -f "$OPENSURV_EXEC" ] || [ ! -x "$OPENSURV_EXEC" ]; then
-        echo "Error: The specified file does not exist or is not executable."
-        exit 1
+    # Use find with timeout to prevent excessive searching
+    FOUND_PATH=$(find /usr /opt /home/$CURRENT_USER -name "opensurv" -type f -executable 2>/dev/null | head -n 1)
+
+    if [ -n "$FOUND_PATH" ]; then
+        OPENSURV_EXEC="$FOUND_PATH"
     fi
 fi
 
-echo "Using OpenSurv executable: $OPENSURV_EXEC"
+# Check for alternative executable names if still not found
+if [ -z "$OPENSURV_EXEC" ]; then
+    for ALT_NAME in OpenSurv openSurv OPENSURV; do
+        FOUND_PATH=$(find /usr /opt /home/$CURRENT_USER -name "$ALT_NAME" -type f -executable 2>/dev/null | head -n 1)
+        if [ -n "$FOUND_PATH" ]; then
+            OPENSURV_EXEC="$FOUND_PATH"
+            break
+        fi
+    done
+fi
+
+# If still not found, check for process
+if [ -z "$OPENSURV_EXEC" ]; then
+    echo "Checking currently running processes..."
+    PROCESS_PATH=$(ps -ef | grep -i "[o]pensurv" | awk '{print $8}' | head -n 1)
+    if [ -n "$PROCESS_PATH" ] && [ -x "$PROCESS_PATH" ]; then
+        OPENSURV_EXEC="$PROCESS_PATH"
+    fi
+fi
+
+# If not found at all, exit
+if [ -z "$OPENSURV_EXEC" ]; then
+    echo "Error: Could not find OpenSurv executable automatically."
+    echo "Please install OpenSurv or run it once before running this script."
+    exit 1
+fi
+
+echo "Found OpenSurv executable: $OPENSURV_EXEC"
 
 # Get the directory containing the executable
 OPENSURV_DIR=$(dirname "$OPENSURV_EXEC")
