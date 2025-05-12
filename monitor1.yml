@@ -1,24 +1,49 @@
 # THIS IS A YAML FILE, INDENTATION IS IMPORTANT. USE SPACES, NOT TABS
 # Configuration for custom layout with three camera streams
+# essentials:
+#   screens:
+#     - streams:
+#       # Full screen background camera
+#       - url: "rtsp://admin:amsystem@192.168.100.184:554/cam/realmonitor?channel=1&subtype=1"
+#         force_coordinates: [0, 0, 1920, 1080]
+#         freeform_advanced_mpv_options: "--rtsp-transport=tcp --profile=low-latency --untimed"
+#         probe_timeout: 5
+      
+#       # Top left panel overlaid on top (BIGGER SIZE)
+#       - url: "rtsp://admin:amsystem@192.168.100.250:554"
+#         force_coordinates: [0, 0, 800, 450]
+#         showontop: True
+#         freeform_advanced_mpv_options: "--rtsp-transport=tcp --profile=low-latency --untimed"
+#         probe_timeout: 5
+      
+#       # Uncomment if you want to add the bottom left panel later
+#       # - url: "rtsp://admin:amsystem@192.168.100.180:554"
+#       #   force_coordinates: [0, 540, 600, 800]
+#       #   showontop: True
+#       #   freeform_advanced_mpv_options: "--rtsp-transport=tcp --profile=low-latency --untimed"
+#       #   probe_timeout: 5
+
+
+
 essentials:
   screens:
     - streams:
-      # Full screen background camera
-      - url: "rtsp://admin:amsystem@192.168.100.184:554/cam/realmonitor?channel=1&subtype=1"
-        force_coordinates: [0, 0, 1920, 1080]
-        freeform_advanced_mpv_options: "--rtsp-transport=tcp --profile=low-latency --untimed"
-        probe_timeout: 5
-      
-      # Top left panel overlaid on top (BIGGER SIZE)
-      - url: "rtsp://admin:amsystem@192.168.100.250:554"
-        force_coordinates: [0, 0, 800, 450]
-        showontop: True
-        freeform_advanced_mpv_options: "--rtsp-transport=tcp --profile=low-latency --untimed"
-        probe_timeout: 5
-      
-      # Uncomment if you want to add the bottom left panel later
-      # - url: "rtsp://admin:amsystem@192.168.100.180:554"
-      #   force_coordinates: [0, 540, 600, 800]
-      #   showontop: True
-      #   freeform_advanced_mpv_options: "--rtsp-transport=tcp --profile=low-latency --untimed"
-      #   probe_timeout: 5
+        - url: "rtsp://admin:amsystem@192.168.100.184:554/cam/realmonitor?channel=1&subtype=1"
+          freeform_advanced_mpv_options: "--rtsp-transport=tcp --profile=low-latency --untimed"
+          probe_timeout: 5
+          force_coordinates: [600, 0, 1920, 800]
+        - url: "https://images.opensurv.net/demo.png"
+          imageurl: true
+          force_coordinates: [0, 0, 600, 400]
+        - url: "https://images.opensurv.net/demo.png"
+          imageurl: true
+          force_coordinates: [0, 400, 600, 800]
+        - url: "https://images.opensurv.net/demo.png"
+          imageurl: true
+          force_coordinates: [0, 800, 600, 1080]
+        - url: "https://images.opensurv.net/demo.png"
+          imageurl: true
+          force_coordinates: [600, 800, 1260, 1080]
+        - url: "https://images.opensurv.net/demo.png"
+          imageurl: true
+          force_coordinates: [1260, 800, 1920, 1080]
