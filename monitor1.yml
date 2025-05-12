@@ -9,9 +9,9 @@ essentials:
         freeform_advanced_mpv_options: "--rtsp-transport=tcp --profile=low-latency --untimed"
         probe_timeout: 5
       
-      # Top left panel overlaid on top
+      # Top left panel overlaid on top (BIGGER SIZE)
       - url: "rtsp://admin:amsystem@192.168.100.250:554"
-        force_coordinates: [0, 0, 600, 270]
+        force_coordinates: [0, 0, 800, 450]
         showontop: True
         freeform_advanced_mpv_options: "--rtsp-transport=tcp --profile=low-latency --untimed"
         probe_timeout: 5
