@@ -11,17 +11,15 @@
       
 #       # Top left panel overlaid on top (BIGGER SIZE)
 #       - url: "rtsp://admin:amsystem@192.168.100.250:554"
-#         force_coordinates: [0, 0, 800, 450]
 #         showontop: True
 #         freeform_advanced_mpv_options: "--rtsp-transport=tcp --profile=low-latency --untimed"
 #         probe_timeout: 5
       
 #       # Uncomment if you want to add the bottom left panel later
-#       # - url: "rtsp://admin:amsystem@192.168.100.180:554"
-#       #   force_coordinates: [0, 540, 600, 800]
-#       #   showontop: True
-#       #   freeform_advanced_mpv_options: "--rtsp-transport=tcp --profile=low-latency --untimed"
-#       #   probe_timeout: 5
+      # - url: "rtsp://admin:amsystem@192.168.100.180:554"
+      #   showontop: True
+      #   freeform_advanced_mpv_options: "--rtsp-transport=tcp --profile=low-latency --untimed"
+      #   probe_timeout: 5
 
 
 
@@ -32,11 +30,16 @@ essentials:
           freeform_advanced_mpv_options: "--rtsp-transport=tcp --profile=low-latency --untimed"
           probe_timeout: 5
           force_coordinates: [600, 0, 1920, 800]
-        - url: "https://images.opensurv.net/demo.png"
-          imageurl: true
+
+        - url: "rtsp://admin:amsystem@192.168.100.250:554/cam/realmonitor?channel=1&subtype=1"
+          showontop: True
+          freeform_advanced_mpv_options: "--rtsp-transport=tcp --profile=low-latency --untimed"
+          probe_timeout: 5
           force_coordinates: [0, 0, 600, 400]
-        - url: "https://images.opensurv.net/demo.png"
-          imageurl: true
+        - url: "rtsp://admin:amsystem@192.168.100.180:554/cam/realmonitor?channel=1&subtype=1"
+          showontop: True
+          freeform_advanced_mpv_options: "--rtsp-transport=tcp --profile=low-latency --untimed"
+          probe_timeout: 5
           force_coordinates: [0, 400, 600, 800]
         - url: "https://images.opensurv.net/demo.png"
           imageurl: true
