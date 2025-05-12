@@ -5,10 +5,10 @@ essentials:
     - streams:
       # Large panel on the right
       - url: "rtsp://admin:amsystem@192.168.100.184:554"
-        force_coordinates: [600, 0, 1920, 800]
-      # Top left panel
-      - url: "rtsp://admin:amsystem@192.168.100.250:554"
-        force_coordinates: [0, 0, 600, 270]
-      # Bottom left panel  
-      - url: "rtsp://admin:amsystem@192.168.100.180:554"
-        force_coordinates: [0, 540, 600, 800]
+        force_coordinates: [0, 0, 1920, 1080]
+      # # Top left panel
+      # - url: "rtsp://admin:amsystem@192.168.100.250:554"
+      #   force_coordinates: [0, 0, 600, 270]
+      # # Bottom left panel  
+      # - url: "rtsp://admin:amsystem@192.168.100.180:554"
+      #   force_coordinates: [0, 540, 600, 800]
